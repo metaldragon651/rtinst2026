@@ -59,11 +59,11 @@ fi
 # Remove apt version of Certbot if installed
 if [ $(dpkg-query -W -f='${Status}' "certbot" 2>/dev/null | grep -c "ok installed") = 1 ]; then
   echo "Removing apt version of Certbot"
-  aptitude -q=5 -y remove certbot python*-certbot-nginx >> $logfile 2>&1
+  apt-get -y remove certbot python*-certbot-nginx >> $logfile 2>&1
 fi
 
 # Install Snapd service
-aptitude -q=5 -y install snapd >> $logfile 2>&1
+apt-get -y install snapd >> $logfile 2>&1
 # Install the core snap in order to get the latest snapd for Debian
 if [ $osname = "Debian" ]; then snap install core >> $logfile 2>&1; snap refresh core; fi
 
