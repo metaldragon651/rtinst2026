@@ -30,8 +30,13 @@ Current release has been tested with clean installs of:
 	Ubuntu 18
 	Ubuntu 19
 	Ubuntu 20
+	Ubuntu 22
+	Ubuntu 23
+	Ubuntu 24
 	Debian 9 "Stretch"
 	Debian 10 "Buster"
+	Debian 11 "Bullseye"
+	Debian 12 "Bookworm"
 
 Services that will be installed and configured are
 

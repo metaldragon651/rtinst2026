@@ -40,12 +40,25 @@ xmlrpcloc_alt='https://github.com/mirror/xmlrpc-c/trunk/stable'
 
 rtdevrel=1
 
-libvers='0.13.8'
-rtvers='0.9.8'
+libvers='0.16.6'
+rtvers='0.16.6'
 
 duoversion=''
 passed_rtvers=$1
 [ -z $logfile ] && logfile="/dev/null"
+
+if [ ! -z "$passed_rtvers" ] && [ "$passed_rtvers" != "latest" ]; then
+  rtvers=$passed_rtvers
+  if [ "$rtvers" = "0.9.8" ]; then
+    libvers="0.13.8"
+  elif [ "$rtvers" = "0.9.7" ]; then
+    libvers="0.13.7"
+  elif [ "$rtvers" = "0.9.6" ]; then
+    libvers="0.13.6"
+  else
+    libvers=$rtvers
+  fi
+fi
 
 
 # checks if an application is installed

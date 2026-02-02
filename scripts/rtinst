@@ -182,7 +182,7 @@ echo $ip_address
 PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
 
 # if left blank will install latest version of rtorrent, or set to a specific release E.G. '0.9.6' to install that release
-rtorrentrel='0.9.8'
+rtorrentrel='0.16.6'
 
 #url's of the major components
 rt_url="https://rakshasa.github.io/rtorrent/"
@@ -250,9 +250,29 @@ if [ "$relno" = "21" ] || [ "$(lsb_release -sr)" = "21.04" ]; then
 fi
 
 if [ "$relno" = "22" ] || [ "$(lsb_release -sr)" = "22.04" ]; then
-  phpver=php7.4
-  phploc=/etc/php/7.4
+  phpver=php8.1
+  phploc=/etc/php/8.1
   libcver=libcurl4
+fi
+
+if [ "$relno" = "24" ] || [ "$(lsb_release -sr)" = "24.04" ]; then
+  phpver=php8.3
+  phploc=/etc/php/8.3
+  libcver=libcurl4
+fi
+
+if [ "$relno" = "12" ]; then
+  phpver=php8.2
+  phploc=/etc/php/8.2
+  libcver=libcurl4
+fi
+
+if [[ "$phpver" == php7* ]] || [[ "$phpver" == php5* ]]; then
+  geoip_pkg="php-geoip"
+  json_pkg="$phpver-json"
+else
+  geoip_pkg=""
+  json_pkg=""
 fi
 
 serveripa=$(ip route get 8.8.8.8 | awk 'NR==1 {print $7}')
@@ -293,7 +313,7 @@ sshport=''
 rudevflag=1
 rurelease=master
 passfile='/etc/nginx/.htpasswd'
-package_list="sudo nano autoconf build-essential ca-certificates comerr-dev curl dtach htop irssi libcppunit-dev $libcver libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libtool libxml2-dev ncurses-base ncurses-term ntp patch pkg-config $phpver-fpm $phpver $phpver-cli $phpver-dev $phpver-curl php-geoip $phpver-xmlrpc $phpver-xml $phpver-zip screen subversion texinfo unzip zlib1g-dev libcurl4-openssl-dev mediainfo software-properties-common $phpver-json nginx-full apache2-utils git libarchive-zip-perl libnet-ssleay-perl libhtml-parser-perl libxml-libxml-perl libjson-perl libjson-xs-perl libxml-libxslt-perl libjson-rpc-perl libarchive-zip-perl"
+package_list="sudo nano autoconf build-essential ca-certificates comerr-dev curl dtach htop irssi libcppunit-dev $libcver libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libtool libxml2-dev ncurses-base ncurses-term ntp patch pkg-config $phpver-fpm $phpver $phpver-cli $phpver-dev $phpver-curl $geoip_pkg $phpver-xmlrpc $phpver-xml $phpver-zip screen subversion texinfo unzip zlib1g-dev libcurl4-openssl-dev mediainfo software-properties-common $json_pkg nginx-full apache2-utils git libarchive-zip-perl libnet-ssleay-perl libhtml-parser-perl libxml-libxml-perl libjson-perl libjson-xs-perl libxml-libxslt-perl libjson-rpc-perl"
 Install_list=""
 unixpass=""
 passflag=0
@@ -320,7 +340,7 @@ else
  echo "Only Ubuntu release 16 and later, and Debian and Raspbian release 9 and later, are supported"
  echo "Your system does not appear to be supported"
  echo "Check https://github.com/arakasi72/rtinst/wiki/Installing-on-Older-OS to see if it is supported by an earlier rtinst release"
- exit
+  exit
 fi
 
 # get options
