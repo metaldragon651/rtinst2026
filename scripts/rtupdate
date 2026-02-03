@@ -159,10 +159,18 @@ echo "Fetching source files"
 #  git clone -q -b feature-bind --single-branch https://github.com/rakshasa/libtorrent.git libtorrent-$libvers
 #  git clone -q -b feature-bind --single-branch https://github.com/rakshasa/rtorrent.git rtorrent-$rtvers
 #else
-  curl -LOJ# https://github.com/rakshasa/rtorrent-archive/raw/master/libtorrent-$libvers.tar.gz
-  tar -xzf libtorrent-$libvers.tar.gz
-  curl -LOJ# https://github.com/rakshasa/rtorrent-archive/raw/master/rtorrent-$rtvers.tar.gz
-  tar -xzf rtorrent-$rtvers.tar.gz
+  curl -fL -o libtorrent-$libvers.tar.gz https://github.com/rakshasa/rtorrent-archive/raw/master/libtorrent-$libvers.tar.gz
+  if [ -s libtorrent-$libvers.tar.gz ]; then
+    tar -xzf libtorrent-$libvers.tar.gz
+  else
+    git clone -q --single-branch --branch v$libvers https://github.com/rakshasa/libtorrent.git libtorrent-$libvers
+  fi
+  curl -fL -o rtorrent-$rtvers.tar.gz https://github.com/rakshasa/rtorrent-archive/raw/master/rtorrent-$rtvers.tar.gz
+  if [ -s rtorrent-$rtvers.tar.gz ]; then
+    tar -xzf rtorrent-$rtvers.tar.gz
+  else
+    git clone -q --single-branch --branch v$rtvers https://github.com/rakshasa/rtorrent.git rtorrent-$rtvers
+  fi
 #fi
 
 if [ $xmlrpc_repo = 0 ]; then
