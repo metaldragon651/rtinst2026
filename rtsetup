@@ -1,0 +1,108 @@
+#!/bin/bash
+
+######################################################################
+#
+#  Copyright (c) 2015 arakasi72 (https://github.com/arakasi72), 2026 metaldragon651
+#
+#  --> Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+#
+######################################################################
+
+PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+
+rundir=$(dirname $(readlink -f $0))
+branch=$1
+
+# function to ask user for y/n response
+ask_user(){
+local answer
+while true
+  do
+    read answer
+    case $answer in [Yy]* ) return 0 ;;
+                    [Nn]* ) return 1 ;;
+                        * ) echo "Enter y or n";;
+    esac
+  done
+}
+
+if [ "$(id -u)" != "0" ]; then
+  echo "Must be run as root, directly or with sudo"
+  exit 1
+fi
+
+# kill apt-daily.service if running 
+if [[ $(systemctl list-units --all apt-daily.service | fgrep -c apt-daily.service) -gt 0 ]]; then
+  systemctl stop apt-daily.service > /dev/null 2>&1
+  systemctl kill --kill-who=all apt-daily.service > /dev/null 2>&1
+  sleep 5
+fi
+
+apt-get -qq update
+
+if [ $(dpkg-query -W -f='${Status}' git 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
+echo "Installing git"
+apt-get -yqq install git 2>&1 >> /dev/null
+fi
+
+if [ $(dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
+echo "Installing ca-certificates"
+apt-get -yqq install ca-certificates 2>&1 >> /dev/null
+fi
+
+
+if [ -d /etc/rtinst ] && [ -z $branch ]; then
+  cd /etc/rtinst
+  branch=$(basename "$(git symbolic-ref -q HEAD)")
+  if [ -z $branch ]; then
+    branch=$(git describe --tags --exact-match)
+    if [ ${branch:0:1} = v ]; then
+      latest=$(curl -s "https://api.github.com/repos/metaldragon651/rtinst2026/releases/latest" | awk -F '"' '/tag_name/{print $4}')
+      if [ $branch != $latest ]; then
+        echo "Updating from $branch to $latest"
+        branch=$latest
+      else
+        echo "Already using the latest version, rtinst $branch"
+        echo -n "Do you wish to reinstall rtinst y/n? "
+        if ! ask_user; then
+          exit
+        fi
+      fi
+    fi
+  fi
+  if [ $(git ls-remote --tags --heads https://github.com/metaldragon651/rtinst2026.git $branch | wc -l) -eq 0 ]; then
+    echo "$branch has been deleted, using latest numbered release instead"
+    branch=release
+  fi
+fi
+
+if [ -z $branch ] || [ $branch = release ]; then
+  branch=$(basename "$(git ls-remote --tags https://github.com/metaldragon651/rtinst2026.git | grep -o 'refs/tags/v.*' | sort -V | tail -1)")
+  if [ -z $branch ]; then
+    echo "Could not find a numbered release, using master instead"
+    branch=master
+  fi
+fi
+
+if [ $(git ls-remote --tags --heads https://github.com/metaldragon651/rtinst2026.git $branch | wc -l) -eq 0 ]; then
+  echo "Could not find $branch, please try again"
+  exit
+fi
+
+echo "Installing rtinst $branch"
+cd
+rm -fr /etc/rtinst
+git clone -q https://github.com/metaldragon651/rtinst2026.git /etc/rtinst
+cd /etc/rtinst
+git checkout $branch > /dev/null 2>&1
+cd
+ln -sf /etc/rtinst/scripts/* /usr/local/bin
+ln -sf /etc/rtinst/rtsetup /usr/local/bin
+
+echo "Installation complete"
+echo
+echo "You can now run rtinst and the additional supporting scripts"
+
+if [ "$rundir" != "/etc/rtinst" ]; then
+    rm -f $rundir/rtsetup
+fi

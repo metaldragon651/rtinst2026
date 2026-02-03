@@ -1,0 +1,51 @@
+#!/bin/bash
+PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+user=""
+soft=""
+hard=""
+enable=0
+OPTS=$(getopt -n "$0" -o eu:s:h: --long "enable,user:,soft:,hard:" -- "$@")
+eval set -- "$OPTS"
+while true; do
+  case "$1" in
+    -e | --enable ) enable=1; shift;;
+    -u | --user ) user="$2"; shift; shift;;
+    -s | --soft ) soft="$2"; shift; shift;;
+    -h | --hard ) hard="$2"; shift; shift;;
+    -- ) shift; break ;;
+     * ) break ;;
+  esac
+done
+if [ "$(id -u)" != "0" ]; then
+  echo "Must be run as root, or with sudo"
+  exit 1
+fi
+mount_point="/home"
+dev=$(df --output=source "$mount_point" | tail -1)
+fstab_line=$(grep " $mount_point " /etc/fstab | head -1)
+if [ $enable = 1 ]; then
+  if [ -z "$fstab_line" ]; then
+    echo "Quotas require $mount_point entry in /etc/fstab"
+    exit 1
+  fi
+  if echo "$fstab_line" | grep -q "usrquota"; then
+    :
+  else
+    sed -i "s#\\( $mount_point .* \\)defaults\\(.*\\)#\\1defaults,usrquota,grpquota\\2#" /etc/fstab
+    mount -o remount "$mount_point"
+  fi
+  apt-get -y install quota >/dev/null 2>&1
+  quotacheck -cum "$mount_point"
+  quotaon "$mount_point"
+  echo "Quotas enabled on $mount_point"
+  exit 0
+fi
+if [ -z "$user" ] || [ -z "$soft" ] || [ -z "$hard" ]; then
+  echo "Usage: rtquota --user USER --soft <blocks> --hard <blocks>"
+  echo "Blocks are 1K units; e.g., soft=1048576 for 1GB"
+  exit 1
+fi
+quotaon "$mount_point" >/dev/null 2>&1 || { echo "Quotas are not enabled; run: rtquota --enable"; exit 1; }
+setquota -u "$user" "$soft" "$hard" 0 0 "$mount_point"
+repquota -u "$mount_point" | grep -E "^[[:space:]]*$user[[:space:]]" || true
+echo "Quota set for $user on $mount_point"
