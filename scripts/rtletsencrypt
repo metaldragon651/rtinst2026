@@ -52,7 +52,7 @@ echo "IP: $serverip"
 echo "DN: $serverdn"
 
 if [ -z $serverdn ]; then
-  echo "Unable to determine domain name cannot setup Lets Encypt"
+  echo "Unable to determine domain name; cannot set up Let's Encrypt"
   exit 1
 fi
 
@@ -98,6 +98,9 @@ if [ $headless = 0 ]; then
 fi
 
 if [ -d "/etc/letsencrypt/live/$serverdn" ]; then
+  if [ ! -f "/etc/cron.d/certbot-renew" ]; then
+    echo "0 3 * * * root /usr/bin/certbot renew --quiet --post-hook 'systemctl reload nginx'" > /etc/cron.d/certbot-renew
+  fi
   echo "Replacing certificates in nginx and vsftpd"
   
   sed -i "/^\(\s\|#\)*server_name/ c\        server_name $serverdn;" /etc/nginx/sites-available/default

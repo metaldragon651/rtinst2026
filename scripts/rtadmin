@@ -54,7 +54,7 @@ echo "4.) rtdload $rtdaction - $rtdaction https downloads"
 echo "5.) rtupdate - up/down-grade rtorent/libtorrent"
 echo "6.) rutupgrade - upgrade to latest version of RuTorrent"
 echo "7.) rtwebmin - install webmin"
-echo "8.) rtletsencrypt - install Lets Encypt ssl certificate"
+echo "8.) rtletsencrypt - install Let's Encrypt SSL certificate"
 echo "9.) rtsslcert - generate new self signed ssl certificate"
 echo "Enter option or q to quit"
 
